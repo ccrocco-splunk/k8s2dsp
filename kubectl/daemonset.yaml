@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: splunk-forwarder
+  namespace: default
+  labels:
+    k8s-app: splunk-forwarder
+spec:
+  selector:
+    matchLabels:
+      name: splunk-forwarder
+  template:
+    metadata:
+      labels:
+        name: splunk-forwarder
+    spec:
+      containers:
+      - name: splunk-forwarder
+        image: splunk/universalforwarder:latest
+        env:
+         - name: SPLUNK_START_ARGS
+           value: "--accept-license"
+         - name: SPLUNK_USER
+           value: "root"
+         - name: SPLUNK_GROUP
+           value: "root"
+         - name: SPLUNK_PASSWORD
+           value: "helloworld"
+         - name: DEBUG
+           value: "true"
+      volumeMounts:
+      - name: splunk-uf-data
+        mountPath: /opt/splunk/var
+      - name: splunk-uf-config
+        mountPath: /opt/splunk/etc
+      - name: varlog
+        mountPath: /var/log
+      - name: varlibdockercontainers
+        mountPath: /var/lib/docker/containers
+        readOnly: true
+      - name: splunk-uf-data
+        mountPath: /opt/splunk/var
+      volumes:
+      - name: varlog
+        hostPath:
+          path: /var/log
+      - name: varlibdockercontainers
+        hostPath:
+          path: /var/lib/docker/containers
+      - name: splunk-config
+        configMap:
+          name: splunk-forwarder-config
